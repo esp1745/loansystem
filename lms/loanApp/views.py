@@ -20,7 +20,7 @@ from django.db.models.functions import TruncMonth
 from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
-from .tasks import send_loan_due_emails
+
 from django.contrib.auth.decorators import login_required
 from .forms import ActiveLoansForm, PaymentsForm, SalesForm, ExpensesForm, TrackerForm, TrackerForm, DocumentFormSet, UploadExcelForm
 
@@ -213,11 +213,7 @@ def logout_view(request):
 
 
 from django.http import HttpResponse
-from .tasks import send_loan_due_emails
 
-def test_send_loan_due_emails(request):
-    result = send_loan_due_emails.delay()
-    return HttpResponse(f'Task initiated with result: {result}')
 
 
 
