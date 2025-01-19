@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <!-- Select2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 on the reference_number field
+            $('#reference_number').select2({
+                placeholder: 'Search for a reference number',
+                allowClear: true
+            });
+
+            // Handle change event to fetch and populate borrower_name and total_loan_amount
+            $('#reference_number').change(function() {
+                const referenceNumber = $(this).val();
+                if (referenceNumber) {
+                    $.ajax({
+                        url: '{% url "get_borrower_name" %}',  // Update with your actual URL
+                        data: {
+                            'reference_number': referenceNumber
+                        },
+                        success: function(data) {
+                            $('#borrower_name').val(data.borrower_name);
+                            $('#total_loan_amount').val(data.total_loan_amount);
+                        }
+                    });
+                } else {
+                    $('#borrower_name').val('');
+                    $('#total_loan_amount').val('');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">{{ form.instance.pk|yesno:"Update Payment,Create Payment" }}</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="borrower_name">Borrower Name</label>
+                <input type="text" class="form-control" id="borrower_name" name="borrower_name" value="{{ form.borrower_name.value }}" readonly>
+                {% for error in form.borrower_name.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="total_loan_amount">Total Loan Amount</label>
+                <input type="number" class="form-control" id="total_loan_amount" name="total_loan_amount" step="0.01" value="{{ form.total_loan_amount.value }}" readonly>
+                {% for error in form.total_loan_amount.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="reference_number">Reference Number</label>
+                <select class="form-control" id="reference_number" name="reference_number">
+                    {% for loan in form.reference_number.field.queryset %}
+                        <option value="{{ loan.reference_number }}" {% if loan.reference_number == form.reference_number.value %}selected{% endif %}>
+                            {{ loan.reference_number }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% for error in form.reference_number.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select class="form-control" id="status" name="status">
+                    {% if not user.is_admin %}
+                        <option value="default" {% if form.status.value == 'default' %}selected{% endif %}>Default</option>
+                    {% else %}
+                        {% for choice in form.status.field.choices %}
+                            <option value="{{ choice.0 }}" {% if choice.0 == form.status.value %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+                {% for error in form.status.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'payments_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

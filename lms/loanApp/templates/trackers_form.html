@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ form.instance.pk|yesno:"Update Tracker,Create Tracker" }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">{{ form.instance.pk|yesno:"Update Tracker,Create Tracker" }}</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="tracking_number">Tracking Number</label>
+                <input type="text" class="form-control" id="tracking_number" name="tracking_number" value="{{ form.tracking_number.value }}">
+                {% for error in form.tracking_number.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="phone_number">Phone Number</label>
+                <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ form.phone_number.value }}">
+                {% for error in form.phone_number.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="client_name">Client Name</label>
+                <input type="text" class="form-control" id="client_name" name="client_name" value="{{ form.client_name.value }}">
+                {% for error in form.client_name.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select class="form-control" id="status" name="status">
+                    {% for choice in form.fields.status.choices %}
+                        <option value="{{ choice.0 }}" {% if choice.0 == form.status.value %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% for error in form.status.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">{{ form.instance.pk|yesno:"Update,Create" }}</button>
+            <a href="{% url 'trackers_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

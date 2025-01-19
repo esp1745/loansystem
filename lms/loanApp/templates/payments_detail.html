@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Payment Details</h1>
+        <table class="table table-bordered">
+            <tr>
+                <th>Borrower Name</th>
+                <td>{{ payment.borrower_name }}</td>
+            </tr>
+            <tr>
+                <th>Total Loan Amount</th>
+                <td>{{ payment.total_loan_amount }}</td>
+            </tr>
+            <tr>
+                <th>Reference Number</th>
+                <td>{{ payment.reference_number }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ payment.status }}</td>
+            </tr>
+        </table>
+        {% if user.is_admin %}
+            <a href="{% url 'payments_update' payment.pk %}" class="btn btn-primary">Complete</a>
+        {% endif %}
+        <a href="{% url 'payments_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</body>
+</html>

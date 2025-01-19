@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#reference_number').change(function() {
+                const referenceNumber = $(this).val();
+                if (referenceNumber) {
+                    $.ajax({
+                        url: '{% url "get_borrower_name" %}',
+                        data: {
+                            'reference_number': referenceNumber
+                        },
+                        success: function(data) {
+                            $('#borrower_name').val(data.borrower_name);
+                            $('#total_loan_amount').val(data.total_loan_amount);
+                        }
+                    });
+                } else {
+                    $('#borrower_name').val('');
+                    $('#total_loan_amount').val('');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Expenses</h1>
+        <form method="post" action="{% url 'expenses_create' %}">
+            {% csrf_token %}
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="expenseName">Expense Name</label>
+                <input type="text" class="form-control" id="expenseName" name="expense_name" placeholder="Expense Name">
+              </div>
+              <div class="form-group col-md-6">
+                <label for="expenseAmount">Expense Amount</label>
+                <input type="number" step="0.01" class="form-control" id="expenseAmount" name="expense_amount" placeholder="Expense Amount">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="dateOfExpense">Date of Expense</label>
+              <input type="date" class="form-control" id="dateOfExpense" name="date_of_expense">
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+          
+    </div>
+</body>
+</html>

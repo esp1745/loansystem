@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Reports</h1>
+
+        <div class="row">
+            <div class="col-md-12 text-center mb-4">
+                <input type="date" id="reportDate" class="form-control d-inline-block" style="width: auto;">
+                <button id="downloadPdf" class="btn btn-primary">Download PDF</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Active Loans Status</h3>
+                <canvas id="activeLoansChart"></canvas>
+            </div>
+            <div class="col-md-6">
+                <h3>Payments Status</h3>
+                <canvas id="paymentsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <h3>Sales Data</h3>
+                <canvas id="salesChart"></canvas>
+            </div>
+            <div class="col-md-6">
+                <h3>Expenses</h3>
+                <canvas id="expensesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <h3>Completed Payments per Month</h3>
+                <canvas id="completedPaymentsChart" width="500" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fetchChartData(url, chart) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Data fetched from', url, data);  // Log data for debugging
+                    chart.data.labels = data.labels;
+                    chart.data.datasets[0].data = data.data[0];
+                    chart.update();
+                })
+                .catch(error => console.error('Error fetching chart data:', error));  // Log errors
+        }
+
+        var activeLoansCtx = document.getElementById('activeLoansChart').getContext('2d');
+        var activeLoansChart = new Chart(activeLoansCtx, {
+            type: 'bar',
+            data: {
+                labels: [], // This will be set dynamically
+                datasets: [{
+                    label: 'Approved',
+                    backgroundColor: '#007bff',
+                    borderColor: '#007bff',
+                    hoverBackgroundColor: '#0056b3',
+                    hoverBorderColor: '#0056b3',
+                    data: [], // This will be set dynamically
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.5
+                }, {
+                    label: 'Pending Approval',
+                    backgroundColor: '#dc3545',
+                    borderColor: '#dc3545',
+                    hoverBackgroundColor: '#c82333',
+                    hoverBorderColor: '#c82333',
+                    data: [], // This will be set dynamically
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.5
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        stacked: false
+                    },
+                    x: {
+                        stacked: false,
+                        grid: {
+                            color: "transparent"
+                        }
+                    }
+                }
+            }
+        });
+
+        var paymentsCtx = document.getElementById('paymentsChart').getContext('2d');
+        var paymentsChart = new Chart(paymentsCtx, {
+            type: 'bar',
+            data: {
+                labels: [], // This will be set dynamically
+                datasets: [{
+                    label: 'Complete',
+                    backgroundColor: '#28a745',
+                    borderColor: '#28a745',
+                    hoverBackgroundColor: '#218838',
+                    hoverBorderColor: '#218838',
+                    data: [], // This will be set dynamically
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.5
+                }, {
+                    label: 'Default',
+                    backgroundColor: '#ffc107',
+                    borderColor: '#ffc107',
+                    hoverBackgroundColor: '#e0a800',
+                    hoverBorderColor: '#e0a800',
+                    data: [], // This will be set dynamically
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.5
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        stacked: false
+                    },
+                    x: {
+                        stacked: false,
+                        grid: {
+                            color: "transparent"
+                        }
+                    }
+                }
+            }
+        });
+
+        var salesCtx = document.getElementById('salesChart').getContext('2d');
+        var salesChart = new Chart(salesCtx, {
+            type: 'bar',
+            data: {
+                labels: [], // This will be set dynamically
+                datasets: [{
+                    label: 'Amount Sold',
+                    backgroundColor: '#6f42c1',
+                    borderColor: '#6f42c1',
+                    hoverBackgroundColor: '#5a2b8e',
+                    hoverBorderColor: '#5a2b8e',
+                    data: [], // This will be set dynamically
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.5
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        stacked: false
+                    },
+                    x: {
+                        stacked: false,
+                        grid: {
+                            color: "transparent"
+                        }
+                    }
+                }
+            }
+        });
+
+        var expensesCtx = document.getElementById('expensesChart').getContext('2d');
+        var expensesChart = new Chart(expensesCtx, {
+            type: 'bar',
+            data: {
+                labels: [], // This will be set dynamically
+                datasets: [{
+                    label: 'Expense Amount',
+                    backgroundColor: '#fd7e14',
+                    borderColor: '#fd7e14',
+                    hoverBackgroundColor: '#e07d2f',
+                    hoverBorderColor: '#e07d2f',
+                    data: [], // This will be set dynamically
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.5
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        stacked: false
+                    },
+                    x: {
+                        stacked: false,
+                        grid: {
+                            color: "transparent"
+                        }
+                    }
+                }
+            }
+        });
+
+        var completedPaymentsCtx = document.getElementById('completedPaymentsChart').getContext('2d');
+        var completedPaymentsChart = new Chart(completedPaymentsCtx, {
+            type: 'bar',
+            data: {
+                labels: [], // This will be set dynamically
+                datasets: [{
+                    label: 'Completed Payments',
+                    backgroundColor: '#007bff',
+                    borderColor: '#007bff',
+                    hoverBackgroundColor: '#0056b3',
+                    hoverBorderColor: '#0056b3',
+                    data: [], // This will be set dynamically
+                    barPercentage: 0.75,
+                    categoryPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: false, // Set to false to respect the canvas element size
+                scales: {
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        stacked: false
+                    },
+                    x: {
+                        stacked: false,
+                        grid: {
+                            color: "transparent"
+                        }
+                    }
+                }
+            }
+        });
+
+        // Fetch data for charts
+        fetchChartData("{% url 'loan_status_chart' %}", activeLoansChart);
+        fetchChartData("{% url 'payment_status_chart' %}", paymentsChart);
+        fetchChartData("{% url 'sales_chart' %}", salesChart);
+        fetchChartData("{% url 'expenses_chart' %}", expensesChart);
+        fetchChartData("{% url 'completed_payments_chart' %}", completedPaymentsChart);
+
+        document.getElementById('downloadPdf').addEventListener('click', () => {
+            const selectedDate = document.getElementById('reportDate').value;
+
+            if (!selectedDate) {
+                alert('Please select a date.');
+                return;
+            }
+
+            html2canvas(document.querySelector('.container')).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                // Add the selected date to the PDF
+                pdf.text(`Report Date: ${selectedDate}`, 10, 10);
+
+                pdf.save('reports.pdf');
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+            });
+        });
+    </script>
+</body>
+</html>

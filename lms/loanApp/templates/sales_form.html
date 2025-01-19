@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#reference_number').select2({
+                placeholder: "Select a reference number",
+                allowClear: true,
+                ajax: {
+                    url: '/get_reference_numbers/', // URL for the AJAX request
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term // Query parameter
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results // Format the results for Select2
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+            // Fetch collateral info based on selected reference number
+            $('#reference_number').on('change', function() {
+                const referenceNumber = $(this).val();
+                const collateralNameInput = $('#collateral_name');
+                const collateralAmountInput = $('#collateral_amount');
+                const actualAmountInput = $('#actual_amount_sold');
+                const profitOrLossInput = $('#profit_or_loss');
+
+                if (referenceNumber) {
+                    $.ajax({
+                        url: '/get_collateral_info/',
+                        data: {
+                            reference_number: referenceNumber
+                        },
+                        success: function (data) {
+                            collateralNameInput.val(data.collateral_name || '');
+                            collateralAmountInput.val(data.collateral_amount || '');
+                            calculateProfitOrLoss();
+                        },
+                        error: function (xhr) {
+                            console.error('Error fetching collateral info:', xhr);
+                            collateralNameInput.val('');
+                            collateralAmountInput.val('');
+                            profitOrLossInput.val('');
+                        }
+                    });
+                } else {
+                    collateralNameInput.val('');
+                    collateralAmountInput.val('');
+                    profitOrLossInput.val('');
+                }
+            });
+
+            function calculateProfitOrLoss() {
+                const collateralAmount = parseFloat($('#collateral_amount').val()) || 0;
+                const actualAmount = parseFloat($('#actual_amount_sold').val()) || 0;
+                $('#profit_or_loss').val((actualAmount - collateralAmount).toFixed(2));
+            }
+
+            $('#actual_amount_sold').on('input', calculateProfitOrLoss);
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">{{ form.instance.pk|yesno:"Update Sale,Create Sale" }}</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="reference_number">Reference Number</label>
+                <select class="form-control" id="reference_number" name="reference_number">
+                    <!-- Options will be dynamically loaded by Select2 -->
+                </select>
+                {% for error in form.reference_number.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="collateral_name">Collateral Name</label>
+                <input type="text" class="form-control" id="collateral_name" name="collateral_name" value="{{ form.collateral_name.value }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="collateral_amount">Collateral Amount</label>
+                <input type="number" class="form-control" id="collateral_amount" name="collateral_amount" step="0.01" value="{{ form.collateral_amount.value }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="actual_amount_sold">Actual Amount Sold</label>
+                <input type="number" class="form-control" id="actual_amount_sold" name="actual_amount_sold" step="0.01" value="{{ form.actual_amount_sold.value }}">
+            </div>
+            <div class="form-group">
+                <label for="profit_or_loss">Profit or Loss</label>
+                <input type="number" class="form-control" id="profit_or_loss" name="profit_or_loss" step="0.01" value="{{ form.profit_or_loss.value }}" readonly>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'sales_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

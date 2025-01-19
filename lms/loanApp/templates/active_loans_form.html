@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Loan Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        function calculateInterest() {
+            const principleAmount = parseFloat(document.getElementById('principleAmount').value) || 0;
+            const loanDate = new Date(document.getElementById('loanDate').value);
+            const dueDate = new Date(document.getElementById('loanDueDate').value);
+            const daysDiff = (dueDate - loanDate) / (1000 * 60 * 60 * 24);
+            let interestAmount = 0;
+
+            if (daysDiff > 30) {
+                const monthsDiff = Math.floor(daysDiff / 30);
+                interestAmount = principleAmount * 0.28 * monthsDiff;
+            } else if (daysDiff >= 7) {
+                const weeksDiff = Math.floor(daysDiff / 7);
+                interestAmount = principleAmount * 0.07 * weeksDiff;
+            } else {
+                interestAmount = principleAmount * 0.07;
+            }
+
+            document.getElementById('interestAmount').value = interestAmount.toFixed(2);
+            calculateTotalLoan();
+        }
+
+        function calculateTotalLoan() {
+            const principleAmount = parseFloat(document.getElementById('principleAmount').value) || 0;
+            const interestAmount = parseFloat(document.getElementById('interestAmount').value) || 0;
+            const totalLoanAmount = principleAmount + interestAmount;
+            document.getElementById('totalLoanAmount').value = totalLoanAmount.toFixed(2);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Active Loan Form</h1>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="borrowerName">Borrower Name</label>
+                    <input type="text" class="form-control" id="borrowerName" name="borrower_name" placeholder="Borrower Name" value="{{ form.borrower_name.value }}">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="nrcNumber">NRC Number</label>
+                    <input type="text" class="form-control" id="nrcNumber" name="nrc_number" placeholder="NRC Number" value="{{ form.nrc_number.value }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="text" class="form-control" id="phoneNumber" name="phone_number" placeholder="Phone Number" value="{{ form.phone_number.value }}">
+            </div>
+            <div class="form-group">
+                <label for="collateralName">Collateral Name</label>
+                <input type="text" class="form-control" id="collateralName" name="collateral_name" placeholder="Collateral Name" value="{{ form.collateral_name.value }}">
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" class="form-control" id="address" name="address" placeholder="Address" value="{{ form.address.value }}">
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="loanDate">Loan Date</label>
+                    <input type="date" class="form-control" id="loanDate" name="loan_date" value="{{ form.loan_date.value }}" onchange="calculateInterest();">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="loanDueDate">Loan Due Date</label>
+                    <input type="date" class="form-control" id="loanDueDate" name="loan_due_date" value="{{ form.loan_due_date.value }}" onchange="calculateInterest();">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="principleAmount">Principle Amount</label>
+                    <input type="number" step="0.01" class="form-control" id="principleAmount" name="principle_amount" placeholder="Principle Amount" value="{{ form.principle_amount.value }}" oninput="calculateInterest(); calculateTotalLoan();">
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="interestAmount">Interest Amount</label>
+                    <input type="number" step="0.01" class="form-control" id="interestAmount" name="interest_amount" placeholder="Interest Amount" value="{{ form.interest_amount.value }}" readonly>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="totalLoanAmount">Total Loan Amount</label>
+                    <input type="number" step="0.01" class="form-control" id="totalLoanAmount" name="total_loan_amount" placeholder="Total Loan Amount" value="{{ form.total_loan_amount.value }}" readonly>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" class="form-control" name="status">
+                    {% if user.is_employee %}
+                        <option value="pending_approval" {% if form.status.value == 'pending_approval' %}selected{% endif %}>Pending Approval</option>
+                    {% else %}
+                        {% for choice in form.status.field.choices %}
+                            <option value="{{ choice.0 }}" {% if choice.0 == form.status.value %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="documents">Upload Loan Documents</label>
+                {{ formset.management_form }}
+                {% for document_form in formset %}
+                    <div class="form-group">
+                        {{ document_form.file.label_tag }}
+                        {{ document_form.file }}
+                    </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn" style="background: #000; color: white; width: 200px;">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
